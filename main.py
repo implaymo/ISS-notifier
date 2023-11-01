@@ -1,19 +1,50 @@
 from datetime import datetime
 import requests
+import smtplib
+import math
+import time
 
-MY_LAT = 56.326341
-MY_LONG = -350.480347
+MY_LAT = 20.0383
+MY_LONG = -91.3085
+MY_EMAIL = "pythonfortest112@gmail.com"
+MY_PASSWORD = "lvxpyibnlkiwylhm"
 
 parameters = {
     "lat": MY_LAT,
     "lng": MY_LONG,
     "formatted": 0
 }
-
+# Sunrise and Sunset time API
 response = requests.get(url="https://api.sunrise-sunset.org/json", params=parameters)
 response.raise_for_status()
-data = response.json()
-sunrise = data["results"]["sunrise"].split("T")[1].split(":")[0]
-sunset = data["results"]["sunset"].split("T")[1].split(":")[0]
+time_data = response.json()
+
+# Sunrise/Sunset hour and Current hour of the day
+sunrise = int(time_data["results"]["sunrise"].split("T")[1].split(":")[0])
+sunset = int(time_data["results"]["sunset"].split("T")[1].split(":")[0])
 time_now = datetime.now()
 time_hour = time_now.hour
+
+# ISS location API
+response = requests.get(url="http://api.open-notify.org/iss-now.json", params=parameters)
+response.raise_for_status()
+iss_data = response.json()
+
+# ISS current location
+iss_latitude = float(iss_data["iss_position"]["latitude"])
+iss_longitude = float(iss_data["iss_position"]["longitude"])
+
+
+threshold = 100.0
+distance = math.sqrt((abs(MY_LAT - iss_latitude)**2 + abs(MY_LONG - iss_longitude)**2))
+
+# Check if ISS is close to my position and is dark time
+while True:
+    if distance < threshold and sunrise > time_hour > sunset:
+        with smtplib.SMTP("smtp.gmail.com") as connection:
+            connection.starttls()
+            connection.login(user=MY_EMAIL, password=MY_PASSWORD)
+            connection.sendmail(from_addr=MY_EMAIL,
+                                to_addrs=MY_EMAIL,
+                                msg=f"Subject: ISS IS HERE!\n\n LOOK AT THE SKY FAST, ISS IS PASSING BY")
+    time.sleep(60)
