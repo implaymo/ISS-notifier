@@ -3,11 +3,20 @@ import requests
 import smtplib
 import math
 import time
+from dotenv import load_dotenv
+import os
 
-MY_LAT = 20.0383
-MY_LONG = -91.3085
-MY_EMAIL = "pythonfortest112@gmail.com"
-MY_PASSWORD = "lvxpyibnlkiwylhm"
+
+def configure():
+    load_dotenv()
+
+
+configure()
+
+MY_LAT = os.getenv("MY_LAT")
+MY_LONG = os.getenv("MY_LONG")
+MY_EMAIL = os.getenv("MY_EMAIL")
+MY_PASSWORD = os.getenv("MY_PASSWORD")
 
 parameters = {
     "lat": MY_LAT,
@@ -36,7 +45,7 @@ iss_longitude = float(iss_data["iss_position"]["longitude"])
 
 
 threshold = 100.0
-distance = math.sqrt((abs(MY_LAT - iss_latitude)**2 + abs(MY_LONG - iss_longitude)**2))
+distance = math.sqrt((abs(float(MY_LAT) - iss_latitude)**2 + abs(float(MY_LONG) - iss_longitude)**2))
 
 # Check if ISS is close to my position and is dark time
 while True:
